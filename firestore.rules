@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ★ ដាក់អ៊ីមែល Admin របស់អ្នកនៅទីនេះ (អក្សរតូចទាំងអស់) — ត្រូវដូចគ្នានឹង adminEmails ក្នុង config.js
-    function adminEmails() { return ['admin@example.com']; }
+    function adminEmails() { return ['sngoeundevith@gmail.com']; }
 
     function signedIn() { return request.auth != null; }
     function isAdmin() {
