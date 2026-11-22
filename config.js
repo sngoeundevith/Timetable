@@ -11,7 +11,7 @@ window.APP_CONFIG = {
 
   adminEmails: ["sngoeundevith@gmail.com"],
 
-  adminPin: "1201",
+  adminPin: "",
 
   telegram: { phone: "012292604", link: "https://t.me/+85512292604" }
 };
