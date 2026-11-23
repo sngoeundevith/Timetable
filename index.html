@@ -399,6 +399,11 @@ var Gate = (function () {
     '.gt .gmsg{min-height:20px;font-size:13px;margin:4px 0 10px}.gt .gmsg.err{color:var(--bad,#c0392b)}.gt .gmsg.ok{color:var(--ok,#1f8a4c)}' +
     '.gt .grow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:12px}.gt .glink{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;font-size:13px;padding:4px 0;text-decoration:none}.gt a,.gt .glink:hover{text-decoration:none}' +
     '.gt .gpw{position:relative;display:block}.gt .gpw input{padding-right:48px}.gt .geye{position:absolute;right:0;top:0;bottom:0;width:46px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;border-radius:0 10px 10px 0}.gt .geye:hover,.gt .geye[aria-pressed=true]{color:var(--accent)}.gt .geye svg{width:22px;height:22px;pointer-events:none}.gt .geye .off{display:none}.gt .geye[aria-pressed=true] .on{display:none}.gt .geye[aria-pressed=true] .off{display:block}' +
+    '.gt .gauth{margin-top:calc(5vh + 112px);position:relative}.gt .gsnail{position:absolute;left:50%;top:-116px;width:230px;height:127px;transform:translateX(-50%);pointer-events:none}.gt .gsnail svg{width:100%;height:100%;overflow:visible}' +
+    '.gsnail .sn-st{transition:transform .35s cubic-bezier(.3,1.4,.5,1);transform-box:fill-box}.gsnail .sn-pp{transition:transform .12s linear}.gsnail .sn-ch{opacity:0;transition:opacity .3s}.gsnail .sn-sh{transition:transform .3s}' +
+    '.gsnail[data-mood=hide] .sn-st{transform:translateY(34px) scaleY(.3)}.gsnail[data-mood=hide] .sn-ch,.gsnail[data-mood=sad] .sn-ch{opacity:.9}' +
+    '.gsnail[data-mood=peek] .sn-s1{transform:translateY(34px) scaleY(.3)}.gsnail[data-mood=peek] .sn-pp{transform:translate(-2px,1px)}.gsnail[data-mood=sad] .sn-st{transform:translateY(10px) scaleY(.75)}.gsnail[data-mood=sad]{animation:snshake .4s 2}' +
+    '.gsnail[data-mood=idle] .sn-st{animation:snbob 3s ease-in-out infinite}@keyframes snbob{50%{transform:translateY(-3px)}}@keyframes snshake{25%{transform:translateX(calc(-50% - 4px))}75%{transform:translateX(calc(-50% + 4px))}}' +
     '.gt .gwait{display:flex;align-items:center;gap:8px;justify-content:center;color:var(--muted);font-size:13px}.gt .gdot{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:gp 1.1s infinite ease-in-out}@keyframes gp{50%{opacity:.25}}' +
     '.gt .gcontact{margin-top:16px;padding:10px 12px;border-radius:10px;background:var(--accent-soft);font-size:13.5px;line-height:1.6}.gt .gcontact a{color:var(--accent);font-weight:600}' +
     '.gt .gbig{font-size:38px;text-align:center;margin:4px 0 8px}.gchip{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}' +
@@ -409,11 +414,16 @@ var Gate = (function () {
     var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
     ELG = document.createElement('div'); ELG.id = 'gate'; ELG.className = 'gt'; ELG.hidden = true; document.body.appendChild(ELG);
     ELG.addEventListener('click', onGateClick); ELG.addEventListener('submit', onGateSubmit);
+    ELG.addEventListener('focusin', function (ev) { if (ev.target.closest && ev.target.closest('#gform')) snail(snailFor(ev.target), ev); });
+    ELG.addEventListener('focusout', function (ev) { if (ev.target.closest && ev.target.closest('#gform') && !(ev.relatedTarget && ELG.contains(ev.relatedTarget))) snail('idle'); });
+    ELG.addEventListener('input', function (ev) { if (ev.target.closest && ev.target.closest('#gform')) snail(snailFor(ev.target), ev); });
+    ELG.addEventListener('keyup', function (ev) { if (ev.target && ev.target.name === 'email') snail('watch', ev); });
+    ELG.addEventListener('click', function (ev) { if (ev.target && ev.target.name === 'email') snail('watch', ev); });
     document.addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('[data-gate]'); if (b && !ELG.contains(b)) onGateClick(ev, b); });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && ev.target && ev.target.id === 'gpin') pinSubmit(); });
   }
   function hideOverlay() { if (ELG) { ELG.hidden = true; ELG.innerHTML = ''; } G.view = ''; }
-  function setMsg(t, kind) { var el = document.getElementById('gmsg'); if (el) { el.textContent = t || ''; el.className = 'gmsg ' + (kind || ''); } }
+  function setMsg(t, kind) { var el = document.getElementById('gmsg'); if (el) { el.textContent = t || ''; el.className = 'gmsg ' + (kind || ''); } if (kind === 'err') snail('sad'); }
   function head(title, sub) { return '<h1>' + title + '</h1><p class="gsub">' + sub + '</p>'; }
   var EYE = '<button type="button" class="geye" data-gate="eye" aria-label="បង្ហាញ/លាក់ពាក្យសម្ងាត់" aria-pressed="false">' +
     '<svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>' +
@@ -433,9 +443,30 @@ var Gate = (function () {
     else if (view === 'pending') ELG.innerHTML = '<div class="gcard"><div class="gbig">⏳</div>' + head('កំពុងរង់ចាំការយល់ព្រម', 'គណនី <b>' + e(G.user.email) + '</b> ត្រូវបានចុះឈ្មោះរួចហើយ។ អ្នកគ្រប់គ្រងត្រូវយល់ព្រមជាមុនសិន ទើបអ្នកអាចប្រើប្រាស់បាន។ ទំព័រនេះនឹងបើកដោយស្វ័យប្រវត្តិ ពេលសំណើត្រូវបានទទួល។') + '<div class="gwait"><span class="gdot"></span>កំពុងរង់ចាំ…</div>' + contact() + '<div class="grow">' + out + '</div></div>';
     else if (view === 'blocked') ELG.innerHTML = '<div class="gcard"><div class="gbig">🚫</div>' + head('គណនីមិនអាចប្រើប្រាស់បាន', 'គណនី <b>' + e(G.user.email) + '</b> ត្រូវបានអ្នកគ្រប់គ្រងលុប ឬផ្អាក។ សូមទាក់ទងអ្នកគ្រប់គ្រង។') + contact() + '<div class="grow">' + out + '</div></div>';
   }
+  var SNAIL = '<div class="gsnail" data-mood="idle" aria-hidden="true"><svg viewBox="0 0 200 110">' +
+    '<path d="M18 98c-6 0-9-5-7-10 3-8 12-14 22-16l8-6c0 0 2 20 14 20h90c8 0 14 5 14 12 0 4-3 8-8 8H26z" fill="#F6C28B"/>' +
+    '<path d="M22 96h150" stroke="#E7A56B" stroke-width="3" stroke-linecap="round" opacity=".5" transform="translate(0,-4)"/>' +
+    '<g class="sn-sh"><circle cx="124" cy="62" r="38" fill="#F28B5B"/><path d="M124 62m0-6a6 6 0 1 1-6 6a12 12 0 1 1 12 12a19 19 0 1 1-19-19a26 26 0 1 1 26 26" fill="none" stroke="#FFD2B3" stroke-width="4.5" stroke-linecap="round"/></g>' +
+    '<g class="sn-st sn-s1"><path d="M30 76V46" stroke="#F6C28B" stroke-width="7" stroke-linecap="round"/><circle cx="30" cy="40" r="11" fill="#fff"/><circle class="sn-pp" cx="30" cy="40" r="5" fill="#2A2438"/></g>' +
+    '<g class="sn-st sn-s2"><path d="M52 74V42" stroke="#F6C28B" stroke-width="7" stroke-linecap="round"/><circle cx="52" cy="36" r="11" fill="#fff"/><circle class="sn-pp" cx="52" cy="36" r="5" fill="#2A2438"/></g>' +
+    '<ellipse class="sn-ch" cx="36" cy="88" rx="7" ry="4" fill="#FF8FA3"/><ellipse class="sn-ch" cx="60" cy="88" rx="7" ry="4" fill="#FF8FA3"/>' +
+    '<path d="M42 90q5 5 10 0" fill="none" stroke="#7A4A2A" stroke-width="2.4" stroke-linecap="round"/></svg></div>';
+  function snail(mood, ev) {
+    var el = ELG && ELG.querySelector('.gsnail'); if (!el) return;
+    if (mood) el.setAttribute('data-mood', mood);
+    var pp = el.querySelectorAll('.sn-pp'), dx = 0, dy = 0;
+    if (ev && ev.target && ev.target.name === 'email') { var n = ev.target.selectionStart == null ? ev.target.value.length : ev.target.selectionStart; dx = Math.max(-1, Math.min(1, (n - 12) / 12)) * 4; dy = 3; }
+    else if (mood === 'idle') { dx = 0; dy = 0; }
+    for (var i = 0; i < pp.length; i++) pp[i].style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+  }
+  function snailFor(inp) {
+    if (!inp || !inp.name) return 'idle';
+    if (inp.name === 'pw') return inp.type === 'password' ? 'hide' : 'peek';
+    return 'watch';
+  }
   function paintAuth() {
     var m = G.authMode, t = { login: ['ចូលប្រើប្រាស់', 'បញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់ ដើម្បីចូលកម្មវិធីរៀបចំកាលវិភាគ។'], signup: ['ចុះឈ្មោះប្រើប្រាស់', 'បំពេញព័ត៌មានខាងក្រោម។ បន្ទាប់ពីចុះឈ្មោះ អ្នកត្រូវរង់ចាំអ្នកគ្រប់គ្រងយល់ព្រមមុន ទើបអាចប្រើបាន។'], reset: ['ភ្លេចពាក្យសម្ងាត់', 'បញ្ចូលអ៊ីមែល យើងនឹងផ្ញើតំណសម្រាប់កំណត់ពាក្យសម្ងាត់ថ្មី។'] }[m];
-    ELG.innerHTML = '<div class="gcard">' + head(t[0], t[1]) + '<form id="gform" novalidate>' +
+    ELG.innerHTML = '<div class="gcard gauth">' + SNAIL + head(t[0], t[1]) + '<form id="gform" novalidate>' +
       (m === 'signup' ? '<label><span>ឈ្មោះ</span><input type="text" name="name" autocomplete="name"></label><label><span>ឈ្មោះសាលា</span><input type="text" name="school" autocomplete="organization"></label>' : '') +
       '<label><span>អ៊ីមែល</span><input type="email" name="email" autocomplete="email" required></label>' +
       (m !== 'reset' ? '<label><span>ពាក្យសម្ងាត់</span><div class="gpw"><input type="password" name="pw" autocomplete="' + (m === 'signup' ? 'new-password' : 'current-password') + '" autocapitalize="off" spellcheck="false" required>' + EYE + '</div></label>' : '') +
@@ -466,7 +497,7 @@ var Gate = (function () {
     else if (a === 'logout') { try { await B.signOut(); } catch (x) {} location.reload(); }
     else if (a === 'reload') location.reload();
     else if (a === 'pin') pinSubmit();
-    else if (a === 'eye') { var inp = b.parentNode.querySelector('input'), show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', show ? 'true' : 'false'); inp.focus(); }
+    else if (a === 'eye') { var inp = b.parentNode.querySelector('input'), show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', show ? 'true' : 'false'); inp.focus(); snail(snailFor(inp)); }
     else if (a === 'publish') publishApp();
     else if (a === 'approve') act(function () { return B.setStatus(uid, 'approved'); }, 'បានទទួលសំណើ');
     else if (a === 'restore') act(function () { return B.setStatus(uid, 'pending'); }, 'បានស្តារទៅបញ្ជីរង់ចាំ');
