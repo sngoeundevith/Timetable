@@ -328,7 +328,13 @@ var Gate = (function () {
     async function ensureProfile(u) {
       try {
         var ref = m.fs.doc(m.db, 'users', u.uid), s = await m.fs.getDoc(ref);
-        if (!s.exists()) await m.fs.setDoc(ref, { email: (u.email || '').toLowerCase(), name: u.displayName || m.pendingName || '', status: 'pending', createdAt: Date.now() });
+        if (!s.exists()) {
+          var doc0 = { email: (u.email || '').toLowerCase(), name: u.displayName || m.pendingName || '', status: 'pending', createdAt: Date.now() };
+          if (m.pendingSchool) {
+            try { await m.fs.setDoc(ref, Object.assign({ school: m.pendingSchool }, doc0)); }
+            catch (x1) { await m.fs.setDoc(ref, doc0); }   /* older rules without the "school" field */
+          } else await m.fs.setDoc(ref, doc0);
+        }
       } catch (x) { /* shown as "pending" with the error in the console */ if (typeof console !== 'undefined') console.warn('profile', x); }
     }
     return {
@@ -343,13 +349,13 @@ var Gate = (function () {
         });
       },
       signIn: function (em, pw) { return m.au.signInWithEmailAndPassword(m.auth, em, pw); },
-      signUp: async function (em, pw, name) { m.pendingName = name || ''; var c = await m.au.createUserWithEmailAndPassword(m.auth, em, pw); if (name) { try { await m.au.updateProfile(c.user, { displayName: name }); } catch (x) {} } },
+      signUp: async function (em, pw, name, school) { m.pendingName = name || ''; m.pendingSchool = school || ''; var c = await m.au.createUserWithEmailAndPassword(m.auth, em, pw); if (name) { try { await m.au.updateProfile(c.user, { displayName: name }); } catch (x) {} } },
       reset: function (em) { return m.au.sendPasswordResetEmail(m.auth, em); },
       signOut: function () { return m.au.signOut(m.auth); },
       watchProfile: function (uid, cb) { return m.fs.onSnapshot(m.fs.doc(m.db, 'users', uid), function (s) { cb(s.exists() ? s.data() : null); }, function () { cb(null); }); },
       watchUsers: function (cb, onErr) {
         return m.fs.onSnapshot(m.fs.query(m.fs.collection(m.db, 'users'), m.fs.orderBy('createdAt', 'desc')), function (s) {
-          cb(s.docs.map(function (d) { var x = d.data(); return { uid: d.id, email: x.email, name: x.name, status: x.status, createdAt: x.createdAt, approvedAt: x.approvedAt }; }));
+          cb(s.docs.map(function (d) { var x = d.data(); return { uid: d.id, email: x.email, name: x.name, school: x.school, status: x.status, createdAt: x.createdAt, approvedAt: x.approvedAt }; }));
         }, function (err) { if (onErr) onErr(err); });
       },
       setStatus: function (uid, status) { return m.fs.updateDoc(m.fs.doc(m.db, 'users', uid), { status: status, approvedAt: Date.now() }); },
@@ -430,12 +436,12 @@ var Gate = (function () {
   function paintAuth() {
     var m = G.authMode, t = { login: ['ចូលប្រើប្រាស់', 'បញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់ ដើម្បីចូលកម្មវិធីរៀបចំកាលវិភាគ។'], signup: ['ចុះឈ្មោះប្រើប្រាស់', 'បំពេញព័ត៌មានខាងក្រោម។ បន្ទាប់ពីចុះឈ្មោះ អ្នកត្រូវរង់ចាំអ្នកគ្រប់គ្រងយល់ព្រមមុន ទើបអាចប្រើបាន។'], reset: ['ភ្លេចពាក្យសម្ងាត់', 'បញ្ចូលអ៊ីមែល យើងនឹងផ្ញើតំណសម្រាប់កំណត់ពាក្យសម្ងាត់ថ្មី។'] }[m];
     ELG.innerHTML = '<div class="gcard">' + head(t[0], t[1]) + '<form id="gform" novalidate>' +
-      (m === 'signup' ? '<label><span>ឈ្មោះ</span><input type="text" name="name" autocomplete="name"></label>' : '') +
+      (m === 'signup' ? '<label><span>ឈ្មោះ</span><input type="text" name="name" autocomplete="name"></label><label><span>ឈ្មោះសាលា</span><input type="text" name="school" autocomplete="organization"></label>' : '') +
       '<label><span>អ៊ីមែល</span><input type="email" name="email" autocomplete="email" required></label>' +
       (m !== 'reset' ? '<label><span>ពាក្យសម្ងាត់</span><div class="gpw"><input type="password" name="pw" autocomplete="' + (m === 'signup' ? 'new-password' : 'current-password') + '" autocapitalize="off" spellcheck="false" required>' + EYE + '</div></label>' : '') +
       '<div id="gmsg" class="gmsg"></div><button class="btn primary" type="submit" style="width:100%">' + { login: 'ចូលប្រើ', signup: 'ចុះឈ្មោះ', reset: 'ផ្ញើតំណកំណត់ពាក្យសម្ងាត់' }[m] + '</button></form>' +
       '<div class="grow">' + (m === 'login' ? '<button class="glink" data-gate="mode" data-m="signup">មិនទាន់មានគណនី? ចុះឈ្មោះ</button><button class="glink" data-gate="mode" data-m="reset">ភ្លេចពាក្យសម្ងាត់</button>' : '<button class="glink" data-gate="mode" data-m="login">មានគណនីរួចហើយ? ចូលប្រើ</button>') + '</div>' + contact() + '</div>';
-    var f = ELG.querySelector('input'); if (f) setTimeout(function () { try { f.focus(); } catch (x) {} }, 30);
+    var f = ELG.querySelector('input'); if (f) setTimeout(function () { try { var ae = document.activeElement; if (f.isConnected && (!ae || ae === document.body || !ELG.contains(ae))) f.focus(); } catch (x) {} }, 30);   /* never steal focus from a field the person already started typing in */
   }
 
   async function onGateSubmit(ev) {
@@ -444,10 +450,11 @@ var Gate = (function () {
     var em = v('email').toLowerCase(), pw = f.elements.pw ? f.elements.pw.value : '';
     if (!em) return setMsg('សូមបញ្ចូលអ៊ីមែល', 'err');
     if (G.authMode === 'signup' && !v('name')) return setMsg('សូមបញ្ចូលឈ្មោះ', 'err');
+    if (G.authMode === 'signup' && !v('school')) return setMsg('សូមបញ្ចូលឈ្មោះសាលា', 'err');
     G.busy = true; setMsg('កំពុងដំណើរការ…');
     try {
       if (G.authMode === 'login') await B.signIn(em, pw);
-      else if (G.authMode === 'signup') await B.signUp(em, pw, v('name'));
+      else if (G.authMode === 'signup') await B.signUp(em, pw, v('name'), v('school'));
       else { await B.reset(em); setMsg('បានផ្ញើតំណទៅអ៊ីមែលរបស់អ្នកហើយ', 'ok'); }
     } catch (x) { setMsg(errMsg(x), 'err'); }
     G.busy = false;
@@ -490,10 +497,10 @@ var Gate = (function () {
       var acts = kind === 'pend' ? '<button class="btn sm primary" data-gate="approve" data-uid="' + e(u.uid) + '">ទទួលសំណើ</button>' + rm :
         kind === 'ok' ? '<button class="btn sm" data-gate="resetpw" data-email="' + e(u.email) + '" title="ផ្ញើតំណកំណត់ពាក្យសម្ងាត់ទៅអ៊ីមែលរបស់គេ">កំណត់ពាក្យសម្ងាត់ឡើងវិញ</button>' + rm :
         '<button class="btn sm" data-gate="restore" data-uid="' + e(u.uid) + '">ស្តារ</button>';
-      return '<tr><td>' + e(u.name || '—') + '</td><td>' + e(u.email) + '</td><td>' + dstr(u.createdAt) + '</td><td><div class="acts">' + acts + '</div></td></tr>';
+      return '<tr><td>' + e(u.name || '—') + '</td><td>' + e(u.email) + '</td><td>' + e(u.school || '—') + '</td><td>' + dstr(u.createdAt) + '</td><td><div class="acts">' + acts + '</div></td></tr>';
     }
     function tbl(list, kind, empty) {
-      return list.length ? '<div class="scroll-x"><table><thead><tr><th>ឈ្មោះ</th><th>អ៊ីមែល</th><th>ថ្ងៃចុះឈ្មោះ</th><th></th></tr></thead><tbody>' + list.map(function (u) { return row(u, kind); }).join('') + '</tbody></table></div>' : '<p class="hint">' + empty + '</p>';
+      return list.length ? '<div class="scroll-x"><table><thead><tr><th>ឈ្មោះ</th><th>អ៊ីមែល</th><th>សាលា</th><th>ថ្ងៃចុះឈ្មោះ</th><th></th></tr></thead><tbody>' + list.map(function (u) { return row(u, kind); }).join('') + '</tbody></table></div>' : '<p class="hint">' + empty + '</p>';
     }
     return '<div class="panel req"><h2>សំណើចុះឈ្មោះ</h2><p class="sub">អ្នកចុះឈ្មោះថ្មីមិនអាចប្រើកម្មវិធីបានទេ រហូតដល់អ្នកចុច «ទទួលសំណើ»។ ពាក្យសម្ងាត់ត្រូវបានគ្រប់គ្រងដោយ Firebase ហើយ <b>មិនត្រូវបានរក្សាទុក ឬបង្ហាញ</b> (ដើម្បីសុវត្ថិភាព)។ បើអ្នកប្រើភ្លេចពាក្យសម្ងាត់ ចុច «កំណត់ពាក្យសម្ងាត់ឡើងវិញ» ដើម្បីផ្ញើតំណទៅអ៊ីមែលរបស់គេ។</p>' +
       '<h3>កំពុងរង់ចាំ (' + K(pend.length) + ')</h3>' + tbl(pend, 'pend', 'គ្មានសំណើថ្មី') +
@@ -564,7 +571,7 @@ var Gate = (function () {
     var uid = G.user.uid;
     return { get: async function () { var j = await B.storeGet(uid); return { exists: j != null, data: function () { return { json: j }; } }; }, set: function (o) { return B.storeSet(uid, o.json); } };
   }
-  return { enabled: enabled, start: start, chip: chip, store: store, isAdmin: isAdmin, showRequests: showRequests, pendingCount: pendingCount, vRequests: vRequests, loadApp: loadApp };
+  return { enabled: enabled, start: start, chip: chip, store: store, isAdmin: isAdmin, showRequests: showRequests, pendingCount: pendingCount, vRequests: vRequests, loadApp: loadApp, school: function () { return (G.profile && G.profile.school) || ''; } };
 })();
 
 
