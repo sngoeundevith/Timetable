@@ -516,7 +516,8 @@ var Gate = (function () {
   }
   function runCode(code) {
     hideOverlay();
-    var sc = document.createElement('script'); sc.textContent = code + '\n//# sourceURL=app-code.js'; document.head.appendChild(sc);
+    var sc = document.createElement('script'); sc.textContent = code; document.head.appendChild(sc);
+    if (sc.parentNode) sc.parentNode.removeChild(sc);   /* the code has run: leave no copy of it in the page, so "Save page as → Complete" captures nothing */
   }
   async function loadApp() {
     ensureDom(); ELG.hidden = false; G.view = 'loading'; G.authPainted = null;
