@@ -7,7 +7,7 @@
 <title>កាលវិភាគមធ្យមសិក្សា</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;500;600;700&family=Moul&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Moul&display=swap">
 <style>
 /* Layout: one wide column. Header with the single primary action, a tab rail for data entry, and a timetable workspace whose master grid scrolls inside its own frame. */
 :root {
@@ -16,8 +16,8 @@
   --accent: #1c4fa0; --accent-ink: #ffffff; --accent-soft: #e3ecfb;
   --good: #17784a; --good-soft: #dff3e8; --warn: #8f5400; --warn-soft: #fdeccc; --bad: #b3261e; --bad-soft: #fbe0dd;
   --sj-bg-s: 62%; --sj-bg-l: 89%; --sj-fg-s: 55%; --sj-fg-l: 21%;
-  --f-body: 'Battambang',  system-ui, sans-serif;
-  --f-display: 'Moul', 'Battambang',  system-ui, sans-serif;
+  --f-body: 'Battambang', 'Noto Sans Khmer', 'Leelawadee UI', system-ui, sans-serif;
+  --f-display: 'Moul', 'Battambang', 'Noto Sans Khmer', system-ui, sans-serif;
   --shadow: 0 1px 2px rgba(20, 33, 58, .06), 0 4px 14px rgba(20, 33, 58, .05);
 }
 @media (prefers-color-scheme: dark) {
@@ -54,7 +54,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* header */
 .hdr { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding-bottom: 14px; }
 .brand { min-width: 0; }
-.brand h1 { font: 400 28px/1.5 var(--f-display); letter-spacing: .02em; color: var(--accent); }
+.brand h1 { font: 400 22px/1.7 var(--f-display); color: var(--accent); }
 .brand p { color: var(--muted); font-size: 13px; }
 .hdr-act { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
@@ -250,7 +250,7 @@ details.issues ul { margin: 6px 0 2px; padding-left: 20px; }
 @media (max-width: 900px) {
   .two-col, .tsplit { grid-template-columns: minmax(0, 1fr); }
   .tlist { max-height: 300px; }
-  .brand h1 { font-size: 24px; }
+  .brand h1 { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
 
@@ -388,10 +388,11 @@ var Gate = (function () {
   /* ---------- overlay UI ---------- */
   var CSS = '#gate{position:fixed;inset:0;z-index:200;background:var(--bg);overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:max(20px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}' +
     '#gate[hidden]{display:none}.gt .gcard{width:100%;max-width:440px;margin-top:6vh;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;padding:26px 24px;box-shadow:0 10px 40px rgba(20,30,60,.10)}' +
-    '.gt h1{font-size:21px;margin:0 0 4px}.gt .gsub{color:var(--muted);font-size:13.5px;margin:0 0 18px;line-height:1.7}' +
+    '.gt h1{font:400 17px/1.8 var(--f-display);color:var(--accent);margin:0 0 6px}.gt .gsub{color:var(--muted);font-size:13.5px;margin:0 0 18px;line-height:1.7}' +
     '.gt label{display:block;margin-bottom:12px}.gt label span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:4px}.gt input[type=text],.gt input[type=email],.gt input[type=password]{width:100%}' +
     '.gt .gmsg{min-height:20px;font-size:13px;margin:4px 0 10px}.gt .gmsg.err{color:var(--bad,#c0392b)}.gt .gmsg.ok{color:var(--ok,#1f8a4c)}' +
-    '.gt .grow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:12px}.gt .glink{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;font-size:13px;padding:4px 0;text-decoration:underline}' +
+    '.gt .grow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:12px}.gt .glink{background:none;border:0;color:var(--accent);cursor:pointer;font:inherit;font-size:13px;padding:4px 0;text-decoration:none}.gt a,.gt .glink:hover{text-decoration:none}' +
+    '.gt .gpw{position:relative;display:block}.gt .gpw input{padding-right:48px}.gt .geye{position:absolute;right:0;top:0;bottom:0;width:46px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;border-radius:0 10px 10px 0}.gt .geye:hover,.gt .geye[aria-pressed=true]{color:var(--accent)}.gt .geye svg{width:22px;height:22px;pointer-events:none}.gt .geye .off{display:none}.gt .geye[aria-pressed=true] .on{display:none}.gt .geye[aria-pressed=true] .off{display:block}' +
     '.gt .gwait{display:flex;align-items:center;gap:8px;justify-content:center;color:var(--muted);font-size:13px}.gt .gdot{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:gp 1.1s infinite ease-in-out}@keyframes gp{50%{opacity:.25}}' +
     '.gt .gcontact{margin-top:16px;padding:10px 12px;border-radius:10px;background:var(--accent-soft);font-size:13.5px;line-height:1.6}.gt .gcontact a{color:var(--accent);font-weight:600}' +
     '.gt .gbig{font-size:38px;text-align:center;margin:4px 0 8px}.gchip{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}' +
@@ -408,6 +409,9 @@ var Gate = (function () {
   function hideOverlay() { if (ELG) { ELG.hidden = true; ELG.innerHTML = ''; } G.view = ''; }
   function setMsg(t, kind) { var el = document.getElementById('gmsg'); if (el) { el.textContent = t || ''; el.className = 'gmsg ' + (kind || ''); } }
   function head(title, sub) { return '<h1>' + title + '</h1><p class="gsub">' + sub + '</p>'; }
+  var EYE = '<button type="button" class="geye" data-gate="eye" aria-label="បង្ហាញ/លាក់ពាក្យសម្ងាត់" aria-pressed="false">' +
+    '<svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>' +
+    '<svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.6 10.6 0 0 1 12 19C5.5 19 1.5 12 1.5 12a18.5 18.5 0 0 1 4.6-5.4M9.9 5.2A9.9 9.9 0 0 1 12 5c6.5 0 10.5 7 10.5 7a18.6 18.6 0 0 1-2.2 3.2M1 1l22 22"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>';
   function contact() {
     var t = CFG.telegram; if (!t || !t.phone) return '';
     var ph = String(t.phone).replace(/\D/g, ''), link = t.link || ('https://t.me/+855' + ph.replace(/^0/, ''));
@@ -428,7 +432,7 @@ var Gate = (function () {
     ELG.innerHTML = '<div class="gcard">' + head(t[0], t[1]) + '<form id="gform" novalidate>' +
       (m === 'signup' ? '<label><span>ឈ្មោះ</span><input type="text" name="name" autocomplete="name"></label>' : '') +
       '<label><span>អ៊ីមែល</span><input type="email" name="email" autocomplete="email" required></label>' +
-      (m !== 'reset' ? '<label><span>ពាក្យសម្ងាត់</span><input type="password" name="pw" autocomplete="' + (m === 'signup' ? 'new-password' : 'current-password') + '" required></label>' : '') +
+      (m !== 'reset' ? '<label><span>ពាក្យសម្ងាត់</span><div class="gpw"><input type="password" name="pw" autocomplete="' + (m === 'signup' ? 'new-password' : 'current-password') + '" autocapitalize="off" spellcheck="false" required>' + EYE + '</div></label>' : '') +
       '<div id="gmsg" class="gmsg"></div><button class="btn primary" type="submit" style="width:100%">' + { login: 'ចូលប្រើ', signup: 'ចុះឈ្មោះ', reset: 'ផ្ញើតំណកំណត់ពាក្យសម្ងាត់' }[m] + '</button></form>' +
       '<div class="grow">' + (m === 'login' ? '<button class="glink" data-gate="mode" data-m="signup">មិនទាន់មានគណនី? ចុះឈ្មោះ</button><button class="glink" data-gate="mode" data-m="reset">ភ្លេចពាក្យសម្ងាត់</button>' : '<button class="glink" data-gate="mode" data-m="login">មានគណនីរួចហើយ? ចូលប្រើ</button>') + '</div>' + contact() + '</div>';
     var f = ELG.querySelector('input'); if (f) setTimeout(function () { try { f.focus(); } catch (x) {} }, 30);
@@ -455,6 +459,7 @@ var Gate = (function () {
     else if (a === 'logout') { try { await B.signOut(); } catch (x) {} location.reload(); }
     else if (a === 'reload') location.reload();
     else if (a === 'pin') pinSubmit();
+    else if (a === 'eye') { var inp = b.parentNode.querySelector('input'), show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', show ? 'true' : 'false'); inp.focus(); }
     else if (a === 'publish') publishApp();
     else if (a === 'approve') act(function () { return B.setStatus(uid, 'approved'); }, 'បានទទួលសំណើ');
     else if (a === 'restore') act(function () { return B.setStatus(uid, 'pending'); }, 'បានស្តារទៅបញ្ជីរង់ចាំ');
